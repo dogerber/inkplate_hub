@@ -48,3 +48,5 @@ Inspration was taken from these awesome projects:
 - Repeating calendar dates will not be displayed (except for yearly repeating)
 - can not typeset Umlaute, nor ° symbol
 - long entry names will mess up the layout on the current day
+
+<a href="https://www.buymeacoffee.com/dogerber" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
