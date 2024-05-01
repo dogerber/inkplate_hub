@@ -45,7 +45,6 @@
 #include "Fonts/moon_Phases36pt7b.h"
 #include "Fonts/FreeSerif12pt7b.h"
 
-
 // ----- Settings -----
 
 // Set to 3 to flip the screen 180 degrees
@@ -54,23 +53,21 @@
 // Delay between API calls (between inkplate is sleeping)
 #define DELAY_MS 3600e6 // 1h in microseconds
 
-
-
 // metric or imperial
 bool metric = true; // TRUE is METRIC, FALSE is IMPERIAL, BLANK is KELVIN
 
 // Layout - fix points
 // Inkplate has 825 x 1200 pixels
-const int layout_XForecast = 540;      //  (horizontal) width of the today panel on the left side
+const int layout_XForecast = 540;                                 //  (horizontal) width of the today panel on the left side
 const int layout_XForecastCalendarStart = layout_XForecast + 200; // (horizontal) width of each day in the coming days
 
-const int layout_YForecastTopOffset = 40;                    // (vertical) distance to top for the forecasts
+const int layout_YForecastTopOffset = 40;                                          // (vertical) distance to top for the forecasts
 const int layout_YForecastHeight = (E_INK_HEIGHT - layout_YForecastTopOffset) / 3; // size of each of the days in the forecast panel
-const int layout_YDateBoxHeight = 100;                       // (horizontal) size of box that shows todays date
-const int layout_YTodayWeatherIcons = 150;                   // (vertical) where the weather (and moon) for today starts
-const int layout_YWeather = 150;                             // (vertical) distance from top to weather (numbers)
-const int layout_YHourly = 400;                              // (vertical) distance from top to hourly forecast
-const int layout_YCalendar = 450;                            // (vertical) where the calendar starts
+const int layout_YDateBoxHeight = 100;                                             // (horizontal) size of box that shows todays date
+const int layout_YTodayWeatherIcons = 150;                                         // (vertical) where the weather (and moon) for today starts
+const int layout_YWeather = 150;                                                   // (vertical) distance from top to weather (numbers)
+const int layout_YHourly = 400;                                                    // (vertical) distance from top to hourly forecast
+const int layout_YCalendar = 450;                                                  // (vertical) where the calendar starts
 
 // Layout - distances
 const int layout_LineHeight = 20; // for normal font
@@ -82,7 +79,6 @@ const int color_textNormal = 1;
 const int color_textImportant = 0;
 const int color_textUnNormal = 4;
 const int color_images = 3;
-
 
 // ----- initiate variables -----
 
@@ -117,7 +113,7 @@ struct entry
 const char *weekdays[] = {"Sunntig", "Maentig", "Zistig", "Mittwuch", "Dunnstig", "Fritig", "Samstig"};
 
 struct tm time1, time2, time3, time4;
-struct tm dates_to_do[4]; 
+struct tm dates_to_do[4];
 
 // Here we store calendar entries
 int entriesNum = 0;
@@ -189,6 +185,7 @@ const uint8_t *s_logos[18] = {
 };
 
 // functions defined below
+void setTimezone(String timezone);
 bool checkIfAPIKeyIsValid(char *APIKEY);
 void alignText(const char align, const char *text, int16_t x, int16_t y);
 void drawTime();
@@ -208,6 +205,15 @@ bool isSameDay(const struct tm &time1, const struct tm &time2);
 int cmp(const void *a, const void *b);
 
 char Output[200] = {0};
+
+void setTimezone(String timezone)
+{
+    // see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+    // and https://randomnerdtutorials.com/esp32-ntp-timezones-daylight-saving/
+    Serial.printf("  Setting Timezone to %s\n", timezone.c_str());
+    setenv("TZ", timezone.c_str(), 1); //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
+    tzset();
+}
 
 void connectWifi()
 {
@@ -243,87 +249,87 @@ void GetCurrentWeather()
     setTime(OWOC.current.dt);
     t = now();
 
-// print weather to serial
-if (false){
-    Serial.println(OWOC.current.timezone_offset);
-
-    //=================================================
-    // Today's results
-    //==================l===============================
-    Serial.println("Current");
-    sprintf(Output,
-            "%s: %02d:%02d,%02d:%02d-%02d:%02d,%02.01fC,%02.01fC,%04.0fhPa,%02.01f%% "
-            "Rh,%02.01fC,%03d%%,UV:%02.01f,%02dkm,%02.01f%m/s,%02.01f%m/s,%03ddeg,%02.02fmm,%02.02fmm,id:%03d,%s,%s,%s",
-            dayShortStr(weekday(t)), hour(t), minute(t), hour(OWOC.current.sunrise), minute(OWOC.current.sunrise),
-            hour(OWOC.current.sunset), minute(OWOC.current.sunset), OWOC.current.temp, OWOC.current.feels_like,
-            OWOC.current.pressure, OWOC.current.humidity, OWOC.current.dew_point, OWOC.current.clouds, OWOC.current.uvi,
-            OWOC.current.visibility / 1000, OWOC.current.wind_speed, OWOC.current.wind_gust, OWOC.current.wind_deg,
-            OWOC.current.rain_1h, OWOC.current.snow_1h, OWOC.current.id, OWOC.current.main, OWOC.current.description,
-            OWOC.current.icon);
-    Serial.println(Output);
-    Serial.println("");
-
-    Serial.println("Minutely Forecast:");
-    for (int minutey = 0; minutey < (sizeof(OWOC.minutely) / sizeof(OWOC.minutely[0])); minutey++)
+    // print weather to serial
+    if (false)
     {
-        sprintf(Output, "%02d:%02d:%02.02fmm,", hour(OWOC.minutely[minutey].dt), minute(OWOC.minutely[minutey].dt),
-                OWOC.minutely[minutey].precipitation);
-        Serial.print(Output);
-    }
-    Serial.println("");
-    Serial.println("");
+        Serial.println(OWOC.current.timezone_offset);
 
-    Serial.println("Hourly Forecast:");
-    for (int Houry = 0; Houry < (sizeof(OWOC.hourly) / sizeof(OWOC.hourly[0])); Houry++)
-    {
-        sprintf(Output,
-                "%02d:%02d:%02.02fC,%02.02fC,%04.0fhPa,%02.01f%% "
-                "Rh,%02.02fC,%03d%%,%02dkm,%02.01f%m/s,%02.01f%m/s,%03ddeg,%03.00f%%,%02.02fmm,%02.02fmm,%03d,%s,%s,%s",
-                hour(OWOC.hourly[Houry].dt), minute(OWOC.hourly[Houry].dt), OWOC.hourly[Houry].temp,
-                OWOC.hourly[Houry].feels_like, OWOC.hourly[Houry].pressure, OWOC.hourly[Houry].humidity,
-                OWOC.hourly[Houry].dew_point, OWOC.hourly[Houry].clouds, OWOC.hourly[Houry].visibility / 1000,
-                OWOC.hourly[Houry].wind_speed, OWOC.hourly[Houry].wind_gust, OWOC.hourly[Houry].wind_deg,
-                OWOC.hourly[Houry].pop * 100, OWOC.hourly[Houry].rain_1h, OWOC.hourly[Houry].snow_1h,
-                OWOC.hourly[Houry].id, OWOC.hourly[Houry].main, OWOC.hourly[Houry].description,
-                OWOC.hourly[Houry].icon);
-        Serial.println(Output);
-    }
-    Serial.println("");
-
-    Serial.println("7 Day Forecast:");
-    for (int y = 0; y < 3; y++)
-    {
-        sprintf(Output,
-                "%s:%02d:%02d-%02d:%02d,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02."
-                "01fC,%02.01fC,%04.0fhPa,%02.01f%% "
-                "Rh,%02.01fC,%02.01f%m/s,%02.01f%m/"
-                "s,%03ddeg,%03d%%,UV:%02.01f,%02dkm,%03.0f%%,%02.02fmm,%02.02fmm,%03d,%s,%s,%s",
-                dayShortStr(weekday(OWOC.forecast[y].dt)), hour(OWOC.forecast[y].sunrise),
-                minute(OWOC.forecast[y].sunrise), hour(OWOC.forecast[y].sunset), minute(OWOC.forecast[y].sunset),
-                OWOC.forecast[y].temp_morn, OWOC.forecast[y].temp_day, OWOC.forecast[y].temp_eve,
-                OWOC.forecast[y].temp_night, OWOC.forecast[y].temp_min, OWOC.forecast[y].temp_max,
-                OWOC.forecast[y].feels_like_morn, OWOC.forecast[y].feels_like_day, OWOC.forecast[y].feels_like_eve,
-                OWOC.forecast[y].feels_like_night, OWOC.forecast[y].pressure, OWOC.forecast[y].humidity,
-                OWOC.forecast[y].dew_point, OWOC.forecast[y].wind_speed, OWOC.forecast[y].wind_gust,
-                OWOC.forecast[y].wind_deg, OWOC.forecast[y].clouds, OWOC.forecast[y].uvi,
-                OWOC.forecast[y].visibility / 1000, OWOC.forecast[y].pop * 100, OWOC.forecast[y].rain,
-                OWOC.forecast[y].snow, OWOC.forecast[y].id, OWOC.forecast[y].main, OWOC.forecast[y].description,
-                OWOC.forecast[y].icon);
-        Serial.println(Output);
-    }
-
-    if (OWOC.alerts.start > 100000)
-    {
         //=================================================
-        // Alerts
+        // Today's results
         //==================l===============================
-        sprintf(Output, "%s,%s,%02d:%02d - %02d:%02d,%s", OWOC.alerts.sender_name, OWOC.alerts.event,
-                hour(OWOC.alerts.start), minute(OWOC.alerts.start), hour(OWOC.alerts.end), minute(OWOC.alerts.end),
-                OWOC.alerts.description);
+        Serial.println("Current");
+        sprintf(Output,
+                "%s: %02d:%02d,%02d:%02d-%02d:%02d,%02.01fC,%02.01fC,%04.0fhPa,%02.01f%% "
+                "Rh,%02.01fC,%03d%%,UV:%02.01f,%02dkm,%02.01f%m/s,%02.01f%m/s,%03ddeg,%02.02fmm,%02.02fmm,id:%03d,%s,%s,%s",
+                dayShortStr(weekday(t)), hour(t), minute(t), hour(OWOC.current.sunrise), minute(OWOC.current.sunrise),
+                hour(OWOC.current.sunset), minute(OWOC.current.sunset), OWOC.current.temp, OWOC.current.feels_like,
+                OWOC.current.pressure, OWOC.current.humidity, OWOC.current.dew_point, OWOC.current.clouds, OWOC.current.uvi,
+                OWOC.current.visibility / 1000, OWOC.current.wind_speed, OWOC.current.wind_gust, OWOC.current.wind_deg,
+                OWOC.current.rain_1h, OWOC.current.snow_1h, OWOC.current.id, OWOC.current.main, OWOC.current.description,
+                OWOC.current.icon);
         Serial.println(Output);
-    }
-}
+        Serial.println("");
 
+        Serial.println("Minutely Forecast:");
+        for (int minutey = 0; minutey < (sizeof(OWOC.minutely) / sizeof(OWOC.minutely[0])); minutey++)
+        {
+            sprintf(Output, "%02d:%02d:%02.02fmm,", hour(OWOC.minutely[minutey].dt), minute(OWOC.minutely[minutey].dt),
+                    OWOC.minutely[minutey].precipitation);
+            Serial.print(Output);
+        }
+        Serial.println("");
+        Serial.println("");
+
+        Serial.println("Hourly Forecast:");
+        for (int Houry = 0; Houry < (sizeof(OWOC.hourly) / sizeof(OWOC.hourly[0])); Houry++)
+        {
+            sprintf(Output,
+                    "%02d:%02d:%02.02fC,%02.02fC,%04.0fhPa,%02.01f%% "
+                    "Rh,%02.02fC,%03d%%,%02dkm,%02.01f%m/s,%02.01f%m/s,%03ddeg,%03.00f%%,%02.02fmm,%02.02fmm,%03d,%s,%s,%s",
+                    hour(OWOC.hourly[Houry].dt), minute(OWOC.hourly[Houry].dt), OWOC.hourly[Houry].temp,
+                    OWOC.hourly[Houry].feels_like, OWOC.hourly[Houry].pressure, OWOC.hourly[Houry].humidity,
+                    OWOC.hourly[Houry].dew_point, OWOC.hourly[Houry].clouds, OWOC.hourly[Houry].visibility / 1000,
+                    OWOC.hourly[Houry].wind_speed, OWOC.hourly[Houry].wind_gust, OWOC.hourly[Houry].wind_deg,
+                    OWOC.hourly[Houry].pop * 100, OWOC.hourly[Houry].rain_1h, OWOC.hourly[Houry].snow_1h,
+                    OWOC.hourly[Houry].id, OWOC.hourly[Houry].main, OWOC.hourly[Houry].description,
+                    OWOC.hourly[Houry].icon);
+            Serial.println(Output);
+        }
+        Serial.println("");
+
+        Serial.println("7 Day Forecast:");
+        for (int y = 0; y < 3; y++)
+        {
+            sprintf(Output,
+                    "%s:%02d:%02d-%02d:%02d,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02.01fC,%02."
+                    "01fC,%02.01fC,%04.0fhPa,%02.01f%% "
+                    "Rh,%02.01fC,%02.01f%m/s,%02.01f%m/"
+                    "s,%03ddeg,%03d%%,UV:%02.01f,%02dkm,%03.0f%%,%02.02fmm,%02.02fmm,%03d,%s,%s,%s",
+                    dayShortStr(weekday(OWOC.forecast[y].dt)), hour(OWOC.forecast[y].sunrise),
+                    minute(OWOC.forecast[y].sunrise), hour(OWOC.forecast[y].sunset), minute(OWOC.forecast[y].sunset),
+                    OWOC.forecast[y].temp_morn, OWOC.forecast[y].temp_day, OWOC.forecast[y].temp_eve,
+                    OWOC.forecast[y].temp_night, OWOC.forecast[y].temp_min, OWOC.forecast[y].temp_max,
+                    OWOC.forecast[y].feels_like_morn, OWOC.forecast[y].feels_like_day, OWOC.forecast[y].feels_like_eve,
+                    OWOC.forecast[y].feels_like_night, OWOC.forecast[y].pressure, OWOC.forecast[y].humidity,
+                    OWOC.forecast[y].dew_point, OWOC.forecast[y].wind_speed, OWOC.forecast[y].wind_gust,
+                    OWOC.forecast[y].wind_deg, OWOC.forecast[y].clouds, OWOC.forecast[y].uvi,
+                    OWOC.forecast[y].visibility / 1000, OWOC.forecast[y].pop * 100, OWOC.forecast[y].rain,
+                    OWOC.forecast[y].snow, OWOC.forecast[y].id, OWOC.forecast[y].main, OWOC.forecast[y].description,
+                    OWOC.forecast[y].icon);
+            Serial.println(Output);
+        }
+
+        if (OWOC.alerts.start > 100000)
+        {
+            //=================================================
+            // Alerts
+            //==================l===============================
+            sprintf(Output, "%s,%s,%02d:%02d - %02d:%02d,%s", OWOC.alerts.sender_name, OWOC.alerts.event,
+                    hour(OWOC.alerts.start), minute(OWOC.alerts.start), hour(OWOC.alerts.end), minute(OWOC.alerts.end),
+                    OWOC.alerts.description);
+            Serial.println(Output);
+        }
+    }
 }
 
 void setup()
@@ -350,11 +356,24 @@ void setup()
 
     network.begin(SSID, PASS);
 
-        // targeted days
+    // set timezone
+    setTimezone("CET-1CEST,M3.5.0,M10.5.0/3");
+
+    // targeted days
     time_t now; // allocate variable
     time(&now); // sets now to the current time in seconds since 1970
     struct tm *localTime = localtime(&now);
+    Serial.println(asctime(localTime));
 
+    if (localTime->tm_isdst)
+    {
+        Serial.println("Its Daylight saving time.");
+        timeZone = timeZone + 1; // hacky
+    }
+    else
+    {
+        Serial.println("Its not Daylight saving time.");
+    }
 
     // Calculate the next four days
     for (int i = 0; i < 4; ++i)
@@ -387,19 +406,17 @@ void setup()
 
     // "today"
     int ytd1 = layout_YCalendar;
-    display.drawLine(0, ytd1, layout_XForecast, ytd1, color_Lines); 
-    display.setCursor(layout_XForecast/2-30, ytd1+layout_LineHeight);
+    display.drawLine(0, ytd1, layout_XForecast, ytd1, color_Lines);
+    display.setCursor(layout_XForecast / 2 - 30, ytd1 + layout_LineHeight);
     display.setTextSize(1);
     display.setFont(&FreeSerif12pt7b);
-    display.setTextColor(color_textNormal,7);
+    display.setTextColor(color_textNormal, 7);
     display.print("Heute");
     ytd1 += 35;
-    display.drawLine(0, ytd1, layout_XForecast, ytd1, color_Lines); 
+    display.drawLine(0, ytd1, layout_XForecast, ytd1, color_Lines);
 
     // fill calender info for today
-    drawCalendarforDate(dates_to_do[0], 50, layout_YCalendar+layout_LineHeight+40);
-
-
+    drawCalendarforDate(dates_to_do[0], 50, layout_YCalendar + layout_LineHeight + 40);
 
     // ----- Weather part -----
     if (true)
@@ -442,9 +459,9 @@ void setup()
         for (int li = 0; li < 3; li++)
         {
             int ytd = layout_YForecastTopOffset + layout_YForecastHeight * li + 4;
-            display.drawThickLine(layout_XForecast, ytd, layout_XForecast + E_INK_WIDTH, ytd, color_Lines,1); // horizontal, bottom line
+            display.drawThickLine(layout_XForecast, ytd, layout_XForecast + E_INK_WIDTH, ytd, color_Lines, 1); // horizontal, bottom line
             ytd -= 33;
-            display.drawThickLine(layout_XForecast, ytd, layout_XForecast + E_INK_WIDTH, ytd, color_Lines,1); // horizontal, top line
+            display.drawThickLine(layout_XForecast, ytd, layout_XForecast + E_INK_WIDTH, ytd, color_Lines, 1); // horizontal, top line
         }
 
         // display.drawLine(0, layout_YCalendar, E_INK_WIDTH, layout_YCalendar, BLACK); // horizontal
@@ -459,7 +476,6 @@ void setup()
         // display.print('V');
 
         display.display();
-
     }
 
     // Go to sleep before checking again
@@ -471,6 +487,7 @@ void setup()
 
 void loop()
 {
+    // never reached, because it goes to deep sleep at the end of setup().
 }
 
 // Format event times, example 13:00 to 14:00
@@ -575,7 +592,7 @@ void parseiCal(int cal_i)
     time_now_element = localtime(&nowSecs);
 
     // determine end date to look for dates
-    time_t inFourDaysS = time(nullptr) + (long)timeZone * 3600L + 4*24*60*60;
+    time_t inFourDaysS = time(nullptr) + (long)timeZone * 3600L + 4 * 24 * 60 * 60;
     struct tm *time_inFourDays_element;
     time_inFourDays_element = localtime(&inFourDaysS);
 
@@ -596,7 +613,7 @@ void parseiCal(int cal_i)
         char *fullDate = strstr(data + i, "DTSTART;VALUE=DATE:") + 19; // full day will be like this "DTSTART;VALUE=DATE:20231113"
         char *timeEnd = strstr(data + i, "DTEND:") + 6;
         char *fullDateEnd = strstr(data + i, "DTEND;VALUE=DATE:") + 17; // full day will be like this "DTEND;VALUE=DATE:20231113"
-        char *yearlyRecurring = strstr(data+i, "YEARLY"); // depending on which code wrote it can be "RRULE:FREQ=YEARLY" or "RRULE:FREQ=YEARLY;INTERVAL=1"
+        char *yearlyRecurring = strstr(data + i, "YEARLY");             // depending on which code wrote it can be "RRULE:FREQ=YEARLY" or "RRULE:FREQ=YEARLY;INTERVAL=1"
 
         if (summary && summary < end && (summary - data) > 0)
         {
@@ -641,7 +658,8 @@ void parseiCal(int cal_i)
         }
 
         // yearly recurring events
-        if (yearlyRecurring && yearlyRecurring < end && (yearlyRecurring - data) > 0){
+        if (yearlyRecurring && yearlyRecurring < end && (yearlyRecurring - data) > 0)
+        {
             // we fake the year and the time
             entries[entriesNum].time_element.tm_year = dates_to_do[0].tm_year;
             entries[entriesNum].time_element_end.tm_year = dates_to_do[0].tm_year;
@@ -649,13 +667,13 @@ void parseiCal(int cal_i)
 
         // append calender identifier
         entries[entriesNum].calID = cal_i;
-        
+
         // preselection to keep entries small
         //   (isDateInRange(dates_to_do[0], entries[entriesNum].time_element, entries[entriesNum].time_element_end))////old: (entries[entriesNum].differenceToNowS > -(24 * 60 * 60) && entries[entriesNum].differenceToNowS < MAX_TIME_WINDOW)
         if (isDateInRange(dates_to_do[0], entries[entriesNum].time_element, entries[entriesNum].time_element_end) ||
-        isDateInRange(dates_to_do[1], entries[entriesNum].time_element, entries[entriesNum].time_element_end) ||
-        isDateInRange(dates_to_do[2], entries[entriesNum].time_element, entries[entriesNum].time_element_end) ||
-        isDateInRange(dates_to_do[3], entries[entriesNum].time_element, entries[entriesNum].time_element_end)  ) 
+            isDateInRange(dates_to_do[1], entries[entriesNum].time_element, entries[entriesNum].time_element_end) ||
+            isDateInRange(dates_to_do[2], entries[entriesNum].time_element, entries[entriesNum].time_element_end) ||
+            isDateInRange(dates_to_do[3], entries[entriesNum].time_element, entries[entriesNum].time_element_end))
         {
             // Serial.println("within timeframe");
             ++entriesNum; // keeps on increasing between calendars
@@ -680,13 +698,13 @@ void drawCalendarforDate(struct tm targetDate, int x_start, int y_start)
 
     int counter_printed = 0; // keep track of how many were printed
     int line_height = 25;
-    int max_height = layout_YForecastHeight-120; // line_height * 5; // stop writing when this is reached
+    int max_height = layout_YForecastHeight - 120; // line_height * 5; // stop writing when this is reached
 
     int xi = x_start, yi = y_start;
-//    display.setFont(&FreeSans12pt7b);
+    //    display.setFont(&FreeSans12pt7b);
     display.setFont(&FreeSerif12pt7b);
     display.setCursor(xi, yi);
-    display.setTextColor(color_textNormal,7);
+    display.setTextColor(color_textNormal, 7);
 
     // go through all entries and plot the one with a fitting date
     for (int i = 0; i < entriesNum; i++) // was ++i
@@ -911,7 +929,7 @@ void drawForecast()
         // determine x-coordinates for displaying
         int textCentre = layout_XForecast + layout_Margin + 80;
 
-        int dayOffset = layout_YForecastTopOffset + (day_i - startDay+0.2) * layout_YForecastHeight; // vertical position
+        int dayOffset = layout_YForecastTopOffset + (day_i - startDay + 0.2) * layout_YForecastHeight; // vertical position
 
         // image of weather
         char icontd[8] = "10d";
@@ -924,7 +942,7 @@ void drawForecast()
         sprintf(Output, "%02.0f / %02.0f C", OWOC.forecast[day_i].temp_min, OWOC.forecast[day_i].temp_max);
         alignText(CENTRE_BOT, Output, textCentre, dayOffset + 100);
 
-        // rain 
+        // rain
         sprintf(Output, "%02.0f%%, %02.01f mm", OWOC.forecast[day_i].pop * 100, OWOC.forecast[day_i].rain + OWOC.forecast[day_i].snow);
         alignText(CENTRE_BOT, Output, textCentre, dayOffset + 120);
 
@@ -935,7 +953,6 @@ void drawForecast()
         sprintf(Output, "%s, %02d.%02d.%04d", dayShortStr(weekday(OWOC.forecast[day_i].dt)), dates_to_do[day_i].tm_mday, dates_to_do[day_i].tm_mon + 1, dates_to_do[day_i].tm_year + 1900); // careful months go from 0 to 11 !
 
         alignText(LEFT_BOT, Output, layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight - 5);
-
 
         // // rain probability (I think)
         // sprintf(Output, "%02.0f%%", OWOC.forecast[day].pop * 100);
@@ -957,8 +974,7 @@ void drawForecast()
         // alignText(CENTRE_BOT, Output, textCentre, dayOffset + 200);
 
         // draw calendar stuff
-        drawCalendarforDate(dates_to_do[day_i], layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight +40);
-
+        drawCalendarforDate(dates_to_do[day_i], layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight + 40);
     }
 }
 
@@ -971,7 +987,7 @@ void drawTime()
     t = now();
     // Drawing current time
 
-    display.setTextColor(7,2);
+    display.setTextColor(7, 2);
     display.setFont(&Roboto_Light_120);
     display.setTextSize(1);
 
@@ -994,12 +1010,18 @@ void drawTime()
     Serial.println(Output);
 }
 
-int sign(int x) {
-    if (x > 0) {
+int sign(int x)
+{
+    if (x > 0)
+    {
         return 1;
-    } else if (x < 0) {
+    }
+    else if (x < 0)
+    {
         return -1;
-    } else {
+    }
+    else
+    {
         return 0;
     }
 }
@@ -1015,8 +1037,8 @@ void drawHourly()
     const int hoursDisplay = 24; // how many hours in the forecast
     const int hourPitch = xWidth / hoursDisplay;
 
-    xWidth = hoursDisplay*hourPitch; // update for nice fit
-    xMargin = (layout_XForecast-xWidth)/2+10; // should put it nicely in the middle
+    xWidth = hoursDisplay * hourPitch;              // update for nice fit
+    xMargin = (layout_XForecast - xWidth) / 2 + 10; // should put it nicely in the middle
     const float minPrec = 0;
     float maxPrec = 5; // this sets the minimum max value of the rain axis
     float maxTemp = 25;
@@ -1040,8 +1062,8 @@ void drawHourly()
     for (int day_td = 0; day_td < 2; day_td++)
     {
 
-        int relHourSunset = difftime(OWOC.forecast[day_td + 0].sunset, OWOC.current.dt)/(3600); 
-        int relHourSunrise = difftime(OWOC.forecast[day_td + 1].sunrise, OWOC.current.dt)/(3600); 
+        int relHourSunset = difftime(OWOC.forecast[day_td + 0].sunset, OWOC.current.dt) / (3600);
+        int relHourSunrise = difftime(OWOC.forecast[day_td + 1].sunrise, OWOC.current.dt) / (3600);
 
         // Serial.println(day_td);
         // Serial.print("Sunset: ");
@@ -1088,25 +1110,21 @@ void drawHourly()
         }
     }
 
-
-
-
     //  make grid
     for (int Houry = 0; Houry <= hoursDisplay; Houry++)
     {
 
-       // display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, BLACK); // vertical tick lines
+        // display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, BLACK); // vertical tick lines
 
         if (OWOC.hourly[Houry].dt == 0)
-        {                                                                                                            
-         //   display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, color_textUnNormal); // horizontal tick lines
+        {
+            //   display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, color_textUnNormal); // horizontal tick lines
         }
 
         if (hour(OWOC.hourly[Houry].dt) == 0) // ? change of day, vertical
-        {                                                                                                            
+        {
             display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, color_textNormal); // vertical tick lines
         }
-
 
         if (!(Houry % 4))
         {
@@ -1119,7 +1137,7 @@ void drawHourly()
     // (?) draw box
     display.setTextColor(color_textNormal);
     display.drawLine(xLeft, yTop + yHeight, xLeft + xWidth, yTop + yHeight, color_textNormal); // bottom line
-    //  display.drawLine(xLeft, yTop, xLeft + xWidth, yTop, color_textNormal); 
+    //  display.drawLine(xLeft, yTop, xLeft + xWidth, yTop, color_textNormal);
 
     // label axis (old)
     // display.setTextColor(color_textUnNormal);
@@ -1134,9 +1152,7 @@ void drawHourly()
     sprintf(Output, "%02.0f", (maxPrec + .499));
     alignText(LEFT, Output, xLeft + xWidth + 5, yTop);
     sprintf(Output, "mm/h");
-    alignText(LEFT, Output, xLeft + xWidth + 5, yTop+20);
-
-
+    alignText(LEFT, Output, xLeft + xWidth + 5, yTop + 20);
 
     // horizontal guide lines
     float yTempScale = (yHeight / (round(maxTemp + 0.499) - round(minTemp - 0.5)));
@@ -1156,7 +1172,8 @@ void drawHourly()
     // yTempScale_temperautres[0] = maxTemp; // start at the top, because thats the way its plotted
     int dT_counter = 0;
 
-    for (int dT_i = floor(maxTemp/dTemperature_lines)*dTemperature_lines; dT_i >= minTemp; dT_i = dT_i-dTemperature_lines){
+    for (int dT_i = floor(maxTemp / dTemperature_lines) * dTemperature_lines; dT_i >= minTemp; dT_i = dT_i - dTemperature_lines)
+    {
         yTempScale_temperautres[dT_counter] = dT_i;
         dT_counter++;
     }
@@ -1171,18 +1188,18 @@ void drawHourly()
     for (int line_i = 0; line_i < dT_counter; line_i++)
     {
 
-        float yPixel_Temp_guide =  yTop + (int)(yTempScale * (round(maxTemp + 0.499) - yTempScale_temperautres[line_i])); 
+        float yPixel_Temp_guide = yTop + (int)(yTempScale * (round(maxTemp + 0.499) - yTempScale_temperautres[line_i]));
         display.drawLine(xLeft, yPixel_Temp_guide, xLeft + xWidth, // was xLeft + xWidth,
                          yPixel_Temp_guide, color_textNormal);
 
         // add labels
-        if (yTempScale_temperautres[line_i] % 10==0)
+        if (yTempScale_temperautres[line_i] % 10 == 0)
         {
             display.setTextColor(color_textUnNormal);
             // if (maxTemp-yTempScale_temperautres[line_i]>10 && yTempScale_temperautres[line_i]-minTemp>10){ // make sure its not to
-            sprintf(Output, "%02.0f", (yTempScale_temperautres[line_i]+0.499));
+            sprintf(Output, "%02.0f", (yTempScale_temperautres[line_i] + 0.499));
             alignText(RIGHT, Output, xLeft - 5, yPixel_Temp_guide);
-           // }
+            // }
         }
     }
 
@@ -1193,19 +1210,18 @@ void drawHourly()
                               yTop + (int)(yTempScale * (round(maxTemp + 0.499) - (OWOC.hourly[Houry].temp))),
                               xLeft + ((Houry + 1) * hourPitch),
                               yTop + (int)(yTempScale * (round(maxTemp + 0.499) - (OWOC.hourly[Houry + 1].temp))),
-                              color_textNormal+1, 2);
+                              color_textNormal + 1, 2);
         float yPrecScale = (yHeight / (round(maxPrec + 0.499)));
         float thisPrec = OWOC.hourly[Houry].rain_1h + OWOC.hourly[Houry].snow_1h;
         display.fillRect(xLeft + (Houry * hourPitch) + round(hourPitch / 3),
                          yTop + (int)(yPrecScale * (round(maxPrec + .499) - thisPrec)), round(hourPitch / 3),
-                         (int)(yPrecScale * thisPrec), color_textNormal+1);
+                         (int)(yPrecScale * thisPrec), color_textNormal + 1);
     }
 }
 
 // Current weather drawing function
 void drawCurrent()
 {
-
 
     // image of current weather
     char icontd[8] = "10d";
@@ -1216,8 +1232,8 @@ void drawCurrent()
 
     // current temperature and max min of the day
     display.setFont(&FreeSans24pt7b);
-    //display.setTextSize(2);
-    display.setTextColor(color_textNormal,7); 
+    // display.setTextSize(2);
+    display.setTextColor(color_textNormal, 7);
     sprintf(Output, "%02.01f 'C", OWOC.current.temp);
     alignText(CENTRE_BOT, Output, layout_XForecast / 2 - 20, layout_YWeather);
 
@@ -1274,12 +1290,12 @@ void drawMoon()
     // convert to appropriate icon
     display.setFont(&moon_Phases36pt7b);
     sprintf(Output, "%c", (char)((int)'A' + (int)(moonage * 25. / 30)));
-    display.setTextColor(color_images,7);
+    display.setTextColor(color_images, 7);
     alignText(CENTRE, Output, MoonCentreX, MoonCentreY);
 
     display.setFont(&FreeSans12pt7b);
     sprintf(Output, "%02d days old", moonage);
-    display.setTextColor(color_images,7);
+    display.setTextColor(color_images, 7);
     alignText(CENTRE_TOP, Output, MoonCentreX, MoonCentreY + MoonBox - 5);
     // int currentphase = moonphase * 28. + .5;
     // alignText(CENTRE_TOP, moonphasenames[currentphase], MoonCentreX, MoonCentreY + MoonBox + 20);
