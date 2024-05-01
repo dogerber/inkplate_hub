@@ -15,7 +15,7 @@ float myLatitude = 40.39;
 float myLongitude = 10.49;
 
 // the time zone to be used
-int timeZone = 2; // use setTimezone instead (?)
+int timeZone = 2; //
 
 // google calendar (or any url that downloads an .ics (iCal) of the calendar)
 // go to Calendar/Settings/Private adress in iCal format
