@@ -117,7 +117,8 @@ struct tm dates_to_do[4];
 
 // Here we store calendar entries
 int entriesNum = 0;
-entry entries[64];
+const int size_entriesNum = 64;
+entry entries[size_entriesNum + 1];
 
 // ----- Weather Variables
 enum alignment
@@ -143,26 +144,26 @@ const char *moonphasenames[29] = {
 // Contants used for drawing icons
 const char abbrs[32][32] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d",
                             "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
-const uint8_t *logos[18] = {
-    icon_01d,
-    icon_02d,
-    icon_03d,
-    icon_04d,
-    icon_09d,
-    icon_10d,
-    icon_11d,
-    icon_13d,
-    icon_50d,
-    icon_01n,
-    icon_02n,
-    icon_03n,
-    icon_04n,
-    icon_09n,
-    icon_10n,
-    icon_11n,
-    icon_13n,
-    icon_50n,
-};
+// const uint8_t *logos[18] = {
+//     icon_01d,
+//     icon_02d,
+//     icon_03d,
+//     icon_04d,
+//     icon_09d,
+//     icon_10d,
+//     icon_11d,
+//     icon_13d,
+//     icon_50d,
+//     icon_01n,
+//     icon_02n,
+//     icon_03n,
+//     icon_04n,
+//     icon_09n,
+//     icon_10n,
+//     icon_11n,
+//     icon_13n,
+//     icon_50n,
+// };
 const uint8_t *s_logos[18] = {
     icon_s_01d,
     icon_s_02d,
@@ -200,6 +201,7 @@ void drawWeatherSmall(char WeatherAbbr[], int x, int y);
 void getToFrom(char *dst, char *from, char *to, int *day, int *timeStamp, double *differenceToNowS, struct tm *time_element, struct tm *time_element_end);
 void parseiCal(int cal_i);
 void drawCalendarforDate(struct tm targetDate, int x_start, int y_start);
+void drawCalendarforForecastDays();
 bool isDateInRange(struct tm checkDate, struct tm startDate, struct tm endDate);
 bool isSameDay(const struct tm &time1, const struct tm &time2);
 int cmp(const void *a, const void *b);
@@ -446,12 +448,14 @@ void setup()
 
         // if ((minute(t) % 30) == 0) // Also returns 0 when time isn't set
         // {
-        GetCurrentWeather();
-        drawForecast();
-        drawCurrent();
-        drawMoon();
-        drawHourly();
-        drawTime();
+        if (false)
+        {
+            GetCurrentWeather();
+            drawForecast();
+            drawCurrent();
+            drawMoon();
+            drawHourly();
+        }
 
         // styling
         display.drawThickLine(layout_XForecast, 0, layout_XForecast, E_INK_HEIGHT, 2, 2); // vertical
@@ -474,9 +478,13 @@ void setup()
         // display.setFont(&FreeSans9pt7b);
         // display.print(voltage, 2); // Print battery voltage
         // display.print('V');
-
-        display.display();
     }
+
+    // calendar and time information for forecast days
+    drawCalendarforForecastDays();
+    drawTime();
+
+    display.display();
 
     // Go to sleep before checking again
     Serial.println("Going to deepsleep.");
@@ -677,6 +685,11 @@ void parseiCal(int cal_i)
         {
             // Serial.println("within timeframe");
             ++entriesNum; // keeps on increasing between calendars
+            if (entriesNum >= size_entriesNum)
+            {
+                Serial.println("entriesNum too high, aborting");
+                break; // prevent overflow
+            }
         }
         else
         {
@@ -897,7 +910,7 @@ void drawWeather(char WeatherAbbr[], int x, int y)
     {
         // If found draw specified icon
         if (strcmp(abbrs[i], WeatherAbbr) == 0)
-            display.drawBitmap(x, y, logos[i], 152, 152, color_images);
+            display.drawBitmap(x, y, s_logos[i], 152, 152, color_images); // was logos
     }
     // else{
     //     Serial.print("Warning: Weather Icon not found for:");
@@ -972,6 +985,32 @@ void drawForecast()
 
         // sprintf(Output, "%03.0f%% Rh", OWOC.forecast[day].humidity);
         // alignText(CENTRE_BOT, Output, textCentre, dayOffset + 200);
+
+        // draw calendar stuff
+        // drawCalendarforDate(dates_to_do[day_i], layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight + 40);
+        // moved to drawCalendarforForecastDays
+    }
+}
+
+void drawCalendarforForecastDays()
+{
+    int xOffset = 10;
+    int startDay = 1;
+
+    for (int day_i = startDay; day_i < 4; day_i++) // 0 is today
+    {
+        // determine x-coordinates for displaying
+        int textCentre = layout_XForecast + layout_Margin + 80;
+
+        int dayOffset = layout_YForecastTopOffset + (day_i - startDay + 0.2) * layout_YForecastHeight; // vertical position
+
+        // Weekday in short form
+        display.setTextColor(color_textNormal, WHITE);
+        display.setTextSize(1);
+        display.setFont(&FreeSans12pt7b);
+        sprintf(Output, "%s, %02d.%02d.%04d", dayShortStr(weekday(OWOC.forecast[day_i].dt)), dates_to_do[day_i].tm_mday, dates_to_do[day_i].tm_mon + 1, dates_to_do[day_i].tm_year + 1900); // careful months go from 0 to 11 !
+
+        alignText(LEFT_BOT, Output, layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight - 5);
 
         // draw calendar stuff
         drawCalendarforDate(dates_to_do[day_i], layout_XForecastCalendarStart, layout_YForecastTopOffset + (day_i - startDay) * layout_YForecastHeight + 40);
@@ -1322,7 +1361,7 @@ bool checkIfAPIKeyIsValid(char *APIKEY)
     http.getStream().setNoDelay(true);
 
     // Combine the base URL and the API key to do a test call
-    char *baseURL = "https://api.openweathermap.org/data/2.5/onecall?lat=45.560001&lon=18.675880&units=metric&appid=";
+    char *baseURL = "https://api.openweathermap.org/data/3.0/onecall?lat=45.560001&lon=18.675880&units=metric&appid=";
     char apiTestURL[200];
     sprintf(apiTestURL, "%s%s", baseURL, APIKEY);
 
