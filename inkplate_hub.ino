@@ -117,7 +117,7 @@ struct tm dates_to_do[4];
 
 // Here we store calendar entries
 int entriesNum = 0;
-entry entries[128];
+entry entries[64];
 
 // ----- Weather Variables
 enum alignment
@@ -204,7 +204,7 @@ bool isDateInRange(struct tm checkDate, struct tm startDate, struct tm endDate);
 bool isSameDay(const struct tm &time1, const struct tm &time2);
 int cmp(const void *a, const void *b);
 
-char Output[200] = {0};
+char Output[200] = {0}; // used for printing to serial
 
 void setTimezone(String timezone)
 {
