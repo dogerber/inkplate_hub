@@ -84,11 +84,6 @@ const int color_images = 3;
 // ----- OpenWeather Settings -----
 // char ONECALLKEY[] = """"; see credentials.h
 
-// Only needed if WiFiTri installed for Triangulation may have fee from Google
-// #define GOOGLEKEY "YOUR GOOGLE DEVELOPER API KEY""
-
-//  OpenWeatherOneCall API Options and Settings
-
 // LOCATION
 
 int myTimeZone = 2; //<--------- GMT OFFSET
@@ -214,45 +209,25 @@ const char *moonphasenames[29] = {
 // Contants used for drawing icons
 const char abbrs[32][32] = {"01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d",
                             "01n", "02n", "03n", "04n", "09n", "10n", "11n", "13n", "50n"};
-// const uint8_t *logos[18] = {
-//     icon_01d,
-//     icon_02d,
-//     icon_03d,
-//     icon_04d,
-//     icon_09d,
-//     icon_10d,
-//     icon_11d,
-//     icon_13d,
-//     icon_50d,
-//     icon_01n,
-//     icon_02n,
-//     icon_03n,
-//     icon_04n,
-//     icon_09n,
-//     icon_10n,
-//     icon_11n,
-//     icon_13n,
-//     icon_50n,
-// };
-const uint8_t *s_logos[18] = {
-    icon_s_01d,
-    icon_s_02d,
-    icon_s_03d,
-    icon_s_04d,
-    icon_s_09d,
-    icon_s_10d,
-    icon_s_11d,
-    icon_s_13d,
-    icon_s_50d,
-    icon_s_01n,
-    icon_s_02n,
-    icon_s_03n,
-    icon_s_04n,
-    icon_s_09n,
-    icon_s_10n,
-    icon_s_11n,
-    icon_s_13n,
-    icon_s_50n,
+const uint8_t *logos[18] = {
+    icon_01d,
+    icon_02d,
+    icon_03d,
+    icon_04d,
+    icon_09d,
+    icon_10d,
+    icon_11d,
+    icon_13d,
+    icon_50d,
+    icon_01n,
+    icon_02n,
+    icon_03n,
+    icon_04n,
+    icon_09n,
+    icon_10n,
+    icon_11n,
+    icon_13n,
+    icon_50n,
 };
 
 // functions defined below
@@ -266,7 +241,6 @@ void drawHourly();
 void drawMoon();
 float getMoonPhase(time_t tdate);
 void drawWeather(char WeatherAbbr[], int x, int y);
-void drawWeatherSmall(char WeatherAbbr[], int x, int y);
 
 void getToFrom(char *dst, char *from, char *to, int *day, int *timeStamp, double *differenceToNowS, struct tm *time_element, struct tm *time_element_end);
 void parseiCal(int cal_i);
@@ -978,22 +952,7 @@ void drawWeather(char WeatherAbbr[], int x, int y)
     {
         // If found draw specified icon
         if (strcmp(abbrs[i], WeatherAbbr) == 0)
-            display.drawBitmap(x, y, s_logos[i], 152, 152, color_images); // was logos
-    }
-    // else{
-    //     Serial.print("Warning: Weather Icon not found for:");
-    //     Serial.println(WeatherAbbr)
-    // }
-}
-
-void drawWeatherSmall(char WeatherAbbr[], int x, int y)
-{
-    // Searching for weather state abbreviation
-    for (int i = 0; i < 18; ++i)
-    {
-        // If found draw specified icon
-        if (strcmp(abbrs[i], WeatherAbbr) == 0)
-            display.drawBitmap(x, y, s_logos[i], 152, 152, color_images);
+            display.drawBitmap(x, y, logos[i], 152, 152, color_images); // was logos
     }
 }
 
