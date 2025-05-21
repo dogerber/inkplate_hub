@@ -16,7 +16,7 @@ The screen refreshes each hour and then goes to sleep to save energy. Battery is
 ## How to build
 
 - Make an account at https://openweathermap.org/ and sign up to the [OneCall Subscription](https://openweathermap.org/api/one-call-3) (1000 Calls per day are for free, I suggest you limit the calls that are possible to 900, to be safe)
-- Install library ArduinoJson
+- Install library OpenWeatherOneCall (v.4.0.3) in Arduino IDE
 - Follow the guide [here](https://github.com/SolderedElectronics/Inkplate-Arduino-library) to set up your Inkboard
 - Put your information in credentials_example.h (Wifi password, location for weather, calendar urls) and rename file to credentials.h
 - upload inkplate_hub.ino to the Inkplate esp32
@@ -43,7 +43,6 @@ Inspration was taken from these awesome projects:
 ## Known problems
 
 - The code is a mess, sorry
-- Uses outdated (but working) version of OpenWeatherOneCall library
 - Repeating calendar dates will not be displayed (except for yearly repeating)
 - can not typeset Umlaute, nor ° symbol
 - long entry names will mess up the layout on the current day

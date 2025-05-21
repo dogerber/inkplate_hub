@@ -1108,18 +1108,6 @@ void drawHourly()
         int relHourSunset = difftime(OWOC.forecast[day_td + 0].sunsetTime, OWOC.current->dayTime) / (3600);
         int relHourSunrise = difftime(OWOC.forecast[day_td + 1].sunriseTime, OWOC.current->dayTime) / (3600);
 
-        // Serial.println(day_td);
-        // Serial.print("Sunset: ");
-        // Serial.print(hour(OWOC.forecast[day_td + 0].sunset));
-        // Serial.print(", Sunrise: ");
-        // Serial.print(hour(OWOC.forecast[day_td + 1].sunrise));
-        // Serial.print(", Now: ");
-        // Serial.print(hour(OWOC.current.dt));
-        // Serial.print(", relative sunset: ");
-        // Serial.print(relHourSunset);
-        // Serial.print(", relative sunrise: ");
-        // Serial.println(relHourSunrise);
-
         // cap to bounds
         if (relHourSunset < 0)
         {
@@ -1137,11 +1125,6 @@ void drawHourly()
         {
             relHourSunrise = hoursDisplay;
         }
-
-        // Serial.print("after cap relativesunrise : ");
-        // Serial.print(relHourSunrise);
-        // Serial.print(", relative sunset: ");
-        // Serial.println(relHourSunset);
 
         if (relHourSunrise != relHourSunset) // check if not both are out-of-bounds
         {
