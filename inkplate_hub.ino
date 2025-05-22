@@ -271,7 +271,7 @@ void connectWifi()
             if (ConnectCount++ == 20)
             {
                 Serial.println("Connect WiFi");
-                WiFi.begin(SSID, PASS);
+                WiFi.begin(SSID, WLAN_PW);
                 Serial.print("Connecting.");
                 ConnectCount = 0;
             }
@@ -392,7 +392,7 @@ void setup()
     // ----- Calendar part -----
     data = (char *)ps_malloc(200000LL); // allocate space for ics download
 
-    network.begin(SSID, PASS);
+    network.begin(SSID, WLAN_PW);
 
     // set timezone
     setTimezone("CET-1CEST,M3.5.0,M10.5.0/3");
@@ -406,7 +406,7 @@ void setup()
     if (localTime->tm_isdst)
     {
         Serial.println("Its Daylight saving time.");
-        timeZone = timeZone + 1; // hacky
+        // timeZone = timeZone + 1; // hacky
     }
     else
     {
@@ -1132,22 +1132,18 @@ void drawHourly()
                              yTop,                                         // y start
                              (relHourSunrise - relHourSunset) * hourPitch, // width
                              yHeight,                                      // height
-                             6);                                           // color, 0 = black , 7 = white
+                             0xf7be);                                      // color, RGB565 https://rgbcolorpicker.com/565
         }
     }
 
-    //  make grid
+    //  make grid and hour labels
     for (int Houry = 0; Houry <= hoursDisplay; Houry++)
     {
+        long time_Houry = hour(OWOC.hour[Houry].dayTime + (timeZone) * 3600L); // .dayTime is in GMT time (-1 for current hour???)
 
         // display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, BLACK); // vertical tick lines
 
-        if (OWOC.hour[Houry].dayTime == 0)
-        {
-            //   display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, color_textUnNormal); // horizontal tick lines
-        }
-
-        if (hour(OWOC.hour[Houry].dayTime) == 0) // ? change of day, vertical
+        if (time_Houry == 0) // ? change of day, vertical
         {
             display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, color_textNormal); // vertical tick lines
         }
@@ -1155,7 +1151,7 @@ void drawHourly()
         if (!(Houry % 4))
         {
             display.setTextColor(color_textUnNormal);
-            sprintf(Output, "%2d", hour(OWOC.hour[Houry].dayTime));
+            sprintf(Output, "%2d", time_Houry);
             alignText(CENTRE_TOP, Output, xLeft + (Houry * hourPitch), yTop + yHeight + 2);
         }
     }
@@ -1164,13 +1160,6 @@ void drawHourly()
     display.setTextColor(color_textNormal);
     display.drawLine(xLeft, yTop + yHeight, xLeft + xWidth, yTop + yHeight, color_textNormal); // bottom line
     //  display.drawLine(xLeft, yTop, xLeft + xWidth, yTop, color_textNormal);
-
-    // label axis (old)
-    // display.setTextColor(color_textUnNormal);
-    // sprintf(Output, "%02.0f", (minTemp - 0.499));
-    // alignText(RIGHT, Output, xLeft - 5, yTop + yHeight);
-    // sprintf(Output, "%02.0f °C", (maxTemp + .5));
-    // alignText(RIGHT, Output, xLeft - 5, yTop);
 
     // sprintf(Output, "%02.0f", minPrec);
     // alignText(LEFT, Output, xLeft + xWidth + 5, yTop + yHeight);
@@ -1203,12 +1192,6 @@ void drawHourly()
         yTempScale_temperautres[dT_counter] = dT_i;
         dT_counter++;
     }
-
-    // // make sure minTemp is on this
-    // if (yTempScale_temperautres[dT_counter-1]!=minTemp){
-    //     yTempScale_temperautres[dT_counter] = minTemp;
-    //     dT_counter++;
-    // }
 
     // draw the horizontal temperature guide lines
     for (int line_i = 0; line_i < dT_counter; line_i++)
