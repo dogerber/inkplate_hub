@@ -406,7 +406,7 @@ void setup()
     if (localTime->tm_isdst)
     {
         Serial.println("Its Daylight saving time.");
-        // timeZone = timeZone + 1; // hacky
+        timeZone = timeZone + 1; // hacky
     }
     else
     {
@@ -1139,7 +1139,7 @@ void drawHourly()
     //  make grid and hour labels
     for (int Houry = 0; Houry <= hoursDisplay; Houry++)
     {
-        long time_Houry = hour(OWOC.hour[Houry].dayTime + (timeZone) * 3600L); // .dayTime is in GMT time (-1 for current hour???)
+        long time_Houry = hour(OWOC.hour[Houry].dayTime + (2) * 3600L); // .dayTime is in GMT time (-1 for current hour???)
 
         // display.drawLine(xLeft + (Houry * hourPitch), yTop, xLeft + (Houry * hourPitch), yTop + yHeight, BLACK); // vertical tick lines
 
@@ -1221,7 +1221,7 @@ void drawHourly()
                               yTop + (int)(yTempScale * (round(maxTemp + 0.499) - (OWOC.hour[Houry + 1].temperature))),
                               color_textNormal + 1, 2);
         float yPrecScale = (yHeight / (round(maxPrec + 0.499)));
-        float thisPrec = OWOC.hour[Houry].rainVolume + OWOC.hour[Houry].snowVolume;
+        float thisPrec = OWOC.hour[Houry].rainVolume + OWOC.hour[Houry].snowVolume; // this depends on the implementation of this change: https://github.com/JHershey69/OpenWeatherOneCall/pull/67
         display.fillRect(xLeft + (Houry * hourPitch) + round(hourPitch / 3),
                          yTop + (int)(yPrecScale * (round(maxPrec + .499) - thisPrec)), round(hourPitch / 3),
                          (int)(yPrecScale * thisPrec), color_textNormal + 1);
